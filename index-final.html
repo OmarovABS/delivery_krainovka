@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e0c0b">
+<title>Kuro — роллы, пицца и закуски</title>
+<style>
+  :root {
+    --bg: #0e0c0b;
+    --bg-2: #151210;
+    --card: #1a1613;
+    --cream: #f4ece0;
+    --muted: #9b9086;
+    --line: rgba(244, 236, 224, 0.1);
+    --accent: #ff5a36;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--cream); -webkit-font-smoothing: antialiased; line-height: 1.5; overflow-x: hidden; }
+  body.locked { overflow: hidden; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input { font-family: inherit; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
+
+  /* ---------- NAV ---------- */
+  .nav {
+    position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 80;
+    width: min(1180px, calc(100% - 24px)); height: 60px; padding: 0 10px 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(21, 18, 16, 0.65);
+    -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid var(--line); border-radius: 980px;
+  }
+  .logo { font-family: var(--serif); font-size: 26px; font-style: italic; letter-spacing: -0.02em; }
+  .logo b { color: var(--accent); font-style: normal; }
+  .cart-btn {
+    display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 20px;
+    background: var(--cream); color: #1a1613; border-radius: 980px; font-size: 14px; font-weight: 700; transition: all 0.3s ease;
+  }
+  .cart-btn:hover { background: var(--accent); color: #fff; transform: scale(1.04); }
+  .badge { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: #1a1613; color: var(--cream); font-size: 12px; display: inline-flex; align-items: center; justify-content: center; }
+  .cart-btn:hover .badge { background: #fff; color: var(--accent); }
+  .bump { animation: bump 0.5s var(--ease); }
+  @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.3); } 100% { transform: scale(1); } }
+
+  /* ---------- HERO (только слова) ---------- */
+  .hero { position: relative; display: flex; align-items: center; justify-content: center; text-align: center; padding: 140px 0 40px; overflow: hidden; }
+  .hero::before {
+    content: ""; position: absolute; width: 900px; height: 900px; left: 50%; top: 40%; transform: translate(-50%, -50%); border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 90, 54, 0.2), transparent 62%); pointer-events: none;
+  }
+  .hero .wrap { position: relative; }
+  .eyebrow { font-family: var(--serif); font-style: italic; font-size: 20px; color: var(--accent); margin-bottom: 26px; letter-spacing: 0.01em; opacity: 0; animation: rise 1s var(--ease) 0.1s forwards; }
+  h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(54px, 10vw, 150px); line-height: 0.95; letter-spacing: -0.045em; opacity: 0; animation: rise 1.1s var(--ease) 0.25s forwards; }
+  h1 em { font-style: italic; color: var(--accent); }
+  .lead { max-width: 560px; margin: 36px auto 0; font-family: var(--serif); font-style: italic; font-size: clamp(19px, 2.2vw, 25px); line-height: 1.45; color: var(--muted); letter-spacing: -0.01em; opacity: 0; animation: rise 1.1s var(--ease) 0.45s forwards; }
+  .scroll { display: inline-flex; margin-top: 54px; width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--line); align-items: center; justify-content: center; font-size: 20px; color: var(--muted); transition: all 0.3s ease; opacity: 0; animation: rise 1s var(--ease) 0.7s forwards; }
+  .scroll:hover { background: var(--cream); color: #1a1613; transform: translateY(4px); }
+  @keyframes rise { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- КАТАЛОГ ---------- */
+  .menu { padding: 40px 0 150px; scroll-margin-top: 20px; }
+  .pills { display: flex; width: fit-content; max-width: 100%; margin: 0 auto 52px; gap: 6px; padding: 6px; border: 1px solid var(--line); border-radius: 980px; background: var(--bg-2); overflow-x: auto; scrollbar-width: none; }
+  .pills::-webkit-scrollbar { display: none; }
+  .pill { padding: 12px 28px; border-radius: 980px; font-size: 15px; font-weight: 600; color: var(--muted); transition: all 0.3s ease; white-space: nowrap; }
+  .pill:hover { color: var(--cream); }
+  .pill.active { background: var(--cream); color: #1a1613; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 22px; }
+  .card {
+    display: flex; flex-direction: column; padding: 14px 14px 22px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 28px;
+    transition: transform 0.4s var(--ease), border-color 0.3s ease, box-shadow 0.4s ease;
+    opacity: 0; animation: rise 0.7s var(--ease) forwards;
+  }
+  .card:hover { transform: translateY(-6px); border-color: rgba(255, 90, 54, 0.45); box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5); }
+  .art { position: relative; aspect-ratio: 1 / 0.9; border-radius: 20px; overflow: hidden; margin-bottom: 20px; background: radial-gradient(circle at 50% 55%, var(--glow, #3a2418), #14100e 78%); }
+  .art > * { transition: transform 0.6s var(--ease); }
+  .card:hover .art > * { transform: scale(1.06) rotate(2deg); }
+  .card h3 { font-family: var(--serif); font-weight: 400; font-size: 28px; letter-spacing: -0.03em; line-height: 1.1; padding: 0 8px; margin-bottom: 22px; flex: 1; }
+  .card .row { display: flex; align-items: center; justify-content: space-between; padding: 0 8px; }
+  .price { font-family: var(--serif); font-size: 26px; letter-spacing: -0.02em; }
+  .price small { font-size: 16px; color: var(--muted); }
+  .add { width: 48px; height: 48px; border-radius: 50%; background: var(--cream); color: #1a1613; font-size: 26px; font-weight: 300; line-height: 1; transition: all 0.35s var(--ease); display: inline-flex; align-items: center; justify-content: center; }
+  .add:hover { background: var(--accent); color: #fff; transform: rotate(90deg) scale(1.1); }
+  .card { position: relative; }
+  .qbadge {
+    position: absolute; top: 26px; right: 26px; z-index: 5; min-width: 48px; height: 36px; padding: 0 14px;
+    display: flex; align-items: center; justify-content: center; border-radius: 980px;
+    background: var(--accent); color: #fff; font-size: 16px; font-weight: 800; letter-spacing: -0.01em;
+    box-shadow: 0 8px 22px rgba(255, 90, 54, 0.5);
+    opacity: 0; transform: scale(0.6); pointer-events: none; transition: all 0.4s var(--ease);
+  }
+  .qbadge.show { opacity: 1; transform: scale(1); }
+  .qbadge.bump { animation: bump 0.45s var(--ease); }
+  .stepper { display: flex; align-items: center; height: 48px; padding: 4px; border-radius: 980px; background: var(--cream); color: #1a1613; }
+  .stepper button { width: 40px; height: 40px; border-radius: 50%; font-size: 22px; line-height: 1; transition: all 0.3s ease; }
+  .stepper button:hover { background: var(--accent); color: #fff; }
+  .stepper button:active { transform: scale(0.9); }
+  .stepper span { min-width: 30px; text-align: center; font-size: 17px; font-weight: 800; }
+
+  /* ---------- CSS-блюда ---------- */
+  .roll {
+    position: absolute; width: var(--s, 46%); aspect-ratio: 1; border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.22), transparent 38%), radial-gradient(circle, var(--fill) 0 12%, var(--fill2) 13% 17%, #f6efe2 18% 50%, var(--out) 51% 100%);
+    box-shadow: 0 18px 28px rgba(0, 0, 0, 0.5), inset 0 0 0 3px rgba(255, 255, 255, 0.05);
+  }
+  .roll::after { content: ""; position: absolute; inset: 18%; border-radius: 50%; opacity: 0.35; background: repeating-radial-gradient(circle, transparent 0 3px, rgba(120, 100, 70, 0.35) 3.5px 4px); }
+  .pizza {
+    position: absolute; left: 50%; top: 50%; width: 76%; aspect-ratio: 1; border-radius: 50%; transform: translate(-50%, -50%);
+    background: radial-gradient(circle, var(--cheese) 0 64%, #e9b765 65% 71%, #c4802f 72% 100%); box-shadow: 0 22px 36px rgba(0, 0, 0, 0.55);
+  }
+  .card:hover .art > .pizza { transform: translate(-50%, -50%) scale(1.06) rotate(6deg); }
+  .pizza::before { content: ""; position: absolute; inset: 9%; border-radius: 50%; opacity: 0.55; filter: blur(8px);
+    background: conic-gradient(from 20deg, transparent 0 30deg, var(--sauce) 30deg 80deg, transparent 80deg 150deg, var(--sauce) 150deg 210deg, transparent 210deg 290deg, var(--sauce) 290deg 330deg, transparent 330deg); }
+  .pizza::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: repeating-conic-gradient(from 0deg, rgba(0, 0, 0, 0.28) 0 0.7deg, transparent 0.7deg 45deg); }
+  .pizza i { position: absolute; z-index: 2; width: 12%; aspect-ratio: 1; border-radius: 50%; background: var(--top); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.2), 0 3px 4px rgba(0, 0, 0, 0.3); }
+  .cup { position: absolute; left: 50%; bottom: 8%; width: 44%; height: 42%; transform: translateX(-50%); background: linear-gradient(90deg, #c3281a, #ef4a34 45%, #b02015); clip-path: polygon(0 0, 100% 0, 88% 100%, 12% 100%); border-radius: 6px 6px 0 0; z-index: 3; }
+  .card:hover .art > .cup { transform: translateX(-50%) scale(1.04); }
+  .bar { position: absolute; border-radius: 8px; background: linear-gradient(var(--c1), var(--c2)); box-shadow: 0 6px 10px rgba(0, 0, 0, 0.35); }
+  .blob { position: absolute; background: radial-gradient(circle at 35% 30%, var(--c1), var(--c2)); box-shadow: 0 8px 12px rgba(0, 0, 0, 0.4); }
+
+  /* ---------- Корзина ---------- */
+  .overlay { position: fixed; inset: 0; z-index: 90; background: rgba(0, 0, 0, 0.55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+  .cart {
+    position: fixed; z-index: 100; top: 12px; right: 12px; bottom: 12px; width: min(450px, calc(100vw - 24px));
+    display: flex; flex-direction: column; border-radius: 32px; border: 1px solid var(--line);
+    background: rgba(24, 20, 17, 0.78); -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
+    box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
+    transform: translateX(calc(100% + 30px)); visibility: hidden; transition: transform 0.55s var(--ease), visibility 0.55s;
+  }
+  .cart.open { transform: none; visibility: visible; }
+  .cart-head { display: flex; justify-content: space-between; align-items: center; padding: 26px 26px 14px; }
+  .cart-head h2 { font-family: var(--serif); font-weight: 400; font-size: 36px; letter-spacing: -0.04em; }
+  .close { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); font-size: 16px; transition: all 0.3s ease; }
+  .close:hover { background: var(--cream); color: #1a1613; transform: rotate(90deg); }
+  .cart-body { flex: 1; overflow-y: auto; padding: 0 26px; overscroll-behavior: contain; }
+  .empty { text-align: center; padding: 60px 0; color: var(--muted); font-size: 15px; }
+  .empty b { display: block; font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 30px; color: var(--cream); margin-bottom: 8px; }
+  .item { display: flex; align-items: center; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--line); animation: rise 0.45s var(--ease) forwards; opacity: 0; }
+  .item-ico { width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; background: radial-gradient(circle, var(--glow, #3a2418), #14100e); }
+  .item-info { flex: 1; min-width: 0; }
+  .item-name { font-family: var(--serif); font-size: 19px; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item-price { font-size: 13px; color: var(--muted); }
+  .qty { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 980px; padding: 2px; }
+  .qty button { width: 30px; height: 30px; border-radius: 50%; font-size: 17px; transition: all 0.3s ease; }
+  .qty button:hover { background: var(--cream); color: #1a1613; }
+  .qty span { min-width: 24px; text-align: center; font-size: 14px; font-weight: 700; }
+  .del { width: 28px; height: 28px; border-radius: 50%; color: var(--muted); font-size: 13px; transition: all 0.3s ease; }
+  .del:hover { color: var(--accent); background: rgba(255, 90, 54, 0.12); }
+
+  .cart-foot { padding: 18px 26px calc(26px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+  .mode { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 12px; border-radius: 16px; background: rgba(244, 236, 224, 0.07); }
+  .mode button { height: 44px; border-radius: 12px; font-size: 15px; font-weight: 600; color: var(--muted); transition: all 0.3s ease; }
+  .mode button.active { background: var(--cream); color: #1a1613; }
+  .field { margin-bottom: 10px; }
+  .field input { width: 100%; height: 54px; padding: 0 18px; border-radius: 16px; border: 1.5px solid transparent; background: rgba(244, 236, 224, 0.07); color: var(--cream); font-size: 16px; outline: none; transition: all 0.3s ease; }
+  .field input::placeholder { color: var(--muted); }
+  .field input:focus { background: rgba(244, 236, 224, 0.1); border-color: var(--accent); box-shadow: 0 0 0 4px rgba(255, 90, 54, 0.18); }
+  .field input.error { border-color: #ff453a; animation: shake 0.4s; }
+  .field.hidden { display: none; }
+  @keyframes shake { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+  .total { display: flex; justify-content: space-between; align-items: baseline; margin: 18px 0 16px; }
+  .total span { color: var(--muted); font-size: 15px; }
+  .total b { font-family: var(--serif); font-weight: 400; font-size: 40px; letter-spacing: -0.03em; }
+  .checkout { width: 100%; height: 60px; border-radius: 18px; background: var(--accent); color: #fff; font-size: 17px; font-weight: 700; box-shadow: 0 14px 36px rgba(255, 90, 54, 0.35); transition: all 0.3s ease; }
+  .checkout:hover { transform: translateY(-2px); box-shadow: 0 20px 44px rgba(255, 90, 54, 0.5); }
+  .checkout:active { transform: scale(0.98); }
+  .checkout:disabled { opacity: 0.35; pointer-events: none; box-shadow: none; }
+
+  .fab { position: fixed; left: 14px; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 70; display: none; justify-content: space-between; align-items: center; height: 60px; padding: 0 24px; border-radius: 20px; background: var(--accent); color: #fff; font-weight: 700; font-size: 16px; box-shadow: 0 16px 40px rgba(255, 90, 54, 0.45); transform: translateY(150%); transition: transform 0.55s var(--ease); }
+  .fab.show { transform: none; }
+
+  @media (max-width: 700px) {
+    .wrap { padding: 0 18px; }
+    .cart { top: auto; left: 0; right: 0; bottom: 0; width: 100%; max-height: 92vh; max-height: 92dvh; border-radius: 32px 32px 0 0; transform: translateY(105%); }
+    .cart::before { content: ""; position: absolute; top: 9px; left: 50%; width: 42px; height: 5px; margin-left: -21px; border-radius: 3px; background: var(--line); }
+    .cart-head { padding-top: 30px; }
+    .fab { display: flex; }
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .card { padding: 10px 10px 18px; border-radius: 22px; }
+    .card h3 { font-size: 20px; }
+    .price { font-size: 20px; }
+    .add { width: 40px; height: 40px; font-size: 22px; }
+    .stepper { height: 40px; padding: 3px; }
+    .stepper button { width: 34px; height: 34px; font-size: 20px; }
+    .stepper span { min-width: 24px; font-size: 15px; }
+    .qbadge { top: 18px; right: 18px; height: 30px; min-width: 40px; font-size: 14px; }
+    .pills { width: 100%; }
+    .pill { flex: 1; padding: 12px 10px; text-align: center; }
+    .menu { padding-bottom: 150px; }
+  }
+  @media (max-width: 400px) { .grid { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="logo" href="#top">Kuro<b>.</b></a>
+  <button class="cart-btn" id="openCart" aria-label="Открыть корзину">Корзина <span class="badge" id="badge">0</span></button>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <h1>Меню</h1>
+  </div>
+</header>
+
+<main class="menu" id="menu">
+  <div class="wrap">
+    <div class="pills" id="pills" role="tablist"></div>
+    <div class="grid" id="grid"></div>
+  </div>
+</main>
+
+<button class="fab" id="fab" aria-label="Открыть корзину"><span id="fabCount">Корзина</span><span id="fabTotal">0 ₽</span></button>
+<div class="overlay" id="overlay"></div>
+
+<aside class="cart" id="cart" role="dialog" aria-modal="true" aria-label="Корзина">
+  <div class="cart-head"><h2>Корзина</h2><button class="close" id="closeCart" aria-label="Закрыть">✕</button></div>
+  <div class="cart-body" id="cartBody"></div>
+  <div class="cart-foot">
+    <div class="mode" id="mode">
+      <button class="active" data-mode="delivery">🚚 Доставка</button>
+      <button data-mode="pickup">🏪 Самовывоз</button>
+    </div>
+    <div class="field"><input type="text" id="name" placeholder="Ваше имя" autocomplete="name"></div>
+    <div class="field" id="addrField"><input type="text" id="address" placeholder="Адрес доставки" autocomplete="street-address"></div>
+    <div class="total"><span>Итого</span><b id="total">0 ₽</b></div>
+    <button class="checkout" id="checkout" disabled>Оформить заказ</button>
+  </div>
+</aside>
+
+<script>
+(function () {
+  'use strict';
+
+  // ====== НАСТРОЙКИ ======
+  var WHATSAPP_NUMBER = '79898851080'; // 8 989 885-10-80 в международном формате
+  var CURRENCY = '₽';
+
+  var CATEGORIES = [
+    { id: 'rolls',  title: 'Роллы',   icon: '🍣' },
+    { id: 'pizza',  title: 'Пицца',   icon: '🍕' },
+    { id: 'snacks', title: 'Закуски', icon: '🍟' }
+  ];
+
+  var PRODUCTS = [
+    { id: 'r1', cat: 'rolls', name: 'Филадельфия', desc: '8 шт · лосось, сливочный сыр, огурец', price: 690, glow: '#4a2616',
+      art: { type: 'roll', fill: '#ff8a5b', fill2: '#ffd9c2', out: '#1b2a22' } },
+    { id: 'r2', cat: 'rolls', name: 'Калифорния', desc: '8 шт · краб, авокадо, икра масаго', price: 620, glow: '#4a3012',
+      art: { type: 'roll', fill: '#ff6b5b', fill2: '#ffd1c9', out: '#ff9d3b' } },
+    { id: 'r3', cat: 'rolls', name: 'Дракон', desc: '8 шт · угорь, огурец, соус унаги', price: 740, glow: '#1f3a1c',
+      art: { type: 'roll', fill: '#7a4a2a', fill2: '#c98a52', out: '#5f8a3f' } },
+    { id: 'r4', cat: 'rolls', name: 'Запечённый лосось', desc: '8 шт · лосось, сыр, сливочный соус', price: 680, glow: '#4a3414',
+      art: { type: 'roll', fill: '#ff9a6b', fill2: '#fff0d6', out: '#e8a64a' } },
+
+    { id: 'p1', cat: 'pizza', name: 'Маргарита', desc: '32 см · томаты, моцарелла, базилик', price: 550, glow: '#4a2a14',
+      art: { type: 'pizza', cheese: '#f7d98a', sauce: '#e2432b', tops: ['#3f8a3a', '#e2432b'] } },
+    { id: 'p2', cat: 'pizza', name: 'Пепперони', desc: '32 см · пепперони, моцарелла, томатный соус', price: 650, glow: '#4a1f14',
+      art: { type: 'pizza', cheese: '#f5cf74', sauce: '#d0361f', tops: ['#b3261a', '#c93a24'] } },
+    { id: 'p3', cat: 'pizza', name: 'Четыре сыра', desc: '32 см · моцарелла, дорблю, пармезан, чеддер', price: 720, glow: '#4a3a14',
+      art: { type: 'pizza', cheese: '#fbe3a0', sauce: '#f0c35a', tops: ['#8fa6c8', '#f4a53a', '#fff3cf'] } },
+    { id: 'p4', cat: 'pizza', name: 'Мясная', desc: '32 см · ветчина, бекон, курица, пепперони', price: 760, glow: '#4a2414',
+      art: { type: 'pizza', cheese: '#f3c76a', sauce: '#c8341f', tops: ['#e58a8a', '#9b3a24', '#b3261a', '#f1d5a8'] } },
+
+    { id: 's1', cat: 'snacks', name: 'Картофель фри', desc: '150 г · с солью и специями', price: 190, glow: '#4a3a14', art: { type: 'fries' } },
+    { id: 's2', cat: 'snacks', name: 'Наггетсы', desc: '6 шт · нежная курица, соус на выбор', price: 290, glow: '#4a3314',
+      art: { type: 'blobs', c1: '#f0b45a', c2: '#c27d2a', shape: '38% 62% 55% 45% / 50% 45% 55% 50%', w: 26, h: 22 } },
+    { id: 's3', cat: 'snacks', name: 'Сырные палочки', desc: '6 шт · моцарелла в хрустящей панировке', price: 320, glow: '#4a3a14',
+      art: { type: 'sticks', c1: '#f3c86a', c2: '#c98a2f' } },
+    { id: 's4', cat: 'snacks', name: 'Крылышки BBQ', desc: '8 шт · в соусе барбекю', price: 420, glow: '#40200f',
+      art: { type: 'blobs', c1: '#b8532a', c2: '#6e2a12', shape: '50% 50% 45% 55% / 60% 40% 60% 40%', w: 30, h: 17 } }
+  ];
+
+  // ====== УТИЛИТЫ ======
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = function (n) { return n.toLocaleString('ru-RU').replace(/\u00a0/g, ' ') + ' ' + CURRENCY; };
+  var byId = {}, catById = {};
+  PRODUCTS.forEach(function (p) { byId[p.id] = p; });
+  CATEGORIES.forEach(function (c) { catById[c.id] = c; });
+
+  var cart = {};
+  var activeCat = CATEGORIES[0].id;
+  var mode = 'delivery';
+
+  try {
+    var saved = JSON.parse(localStorage.getItem('kuro_cart_final') || '{}');
+    Object.keys(saved).forEach(function (k) { if (byId[k] && saved[k] > 0) cart[k] = Math.min(99, saved[k] | 0); });
+  } catch (e) {}
+  function persist() { try { localStorage.setItem('kuro_cart_final', JSON.stringify(cart)); } catch (e) {} }
+  function count() { return Object.keys(cart).reduce(function (s, k) { return s + cart[k]; }, 0); }
+  function sum() { return Object.keys(cart).reduce(function (s, k) { return s + cart[k] * byId[k].price; }, 0); }
+
+  // ====== CSS-ИЛЛЮСТРАЦИИ БЛЮД ======
+  function artHTML(p) {
+    var a = p.art, h = '', i;
+    if (a.type === 'roll') {
+      var st = '--fill:' + a.fill + ';--fill2:' + a.fill2 + ';--out:' + a.out;
+      h += '<div class="roll" style="' + st + ';--s:50%;left:8%;top:26%"></div>';
+      h += '<div class="roll" style="' + st + ';--s:42%;right:8%;top:12%"></div>';
+      h += '<div class="roll" style="' + st + ';--s:36%;right:22%;bottom:8%"></div>';
+    } else if (a.type === 'pizza') {
+      var pos = [[44,14],[68,26],[22,30],[50,40],[76,52],[30,56],[58,68],[18,70],[44,80]];
+      h += '<div class="pizza" style="--cheese:' + a.cheese + ';--sauce:' + a.sauce + '">';
+      for (i = 0; i < pos.length; i++) h += '<i style="left:' + pos[i][0] + '%;top:' + pos[i][1] + '%;--top:' + a.tops[i % a.tops.length] + '"></i>';
+      h += '</div>';
+    } else if (a.type === 'fries') {
+      var l = [18,26,34,42,50,58,66,74];
+      for (i = 0; i < l.length; i++) h += '<div class="bar" style="--c1:#ffe08a;--c2:#e0a73a;width:7%;height:' + (44 + (i * 7) % 18) + '%;left:' + l[i] + '%;bottom:34%;transform:rotate(' + ((i % 4) * 5 - 8) + 'deg)"></div>';
+      h += '<div class="cup"></div>';
+    } else if (a.type === 'sticks') {
+      for (i = 0; i < 5; i++) h += '<div class="bar" style="--c1:' + a.c1 + ';--c2:' + a.c2 + ';width:11%;height:48%;left:' + (14 + i * 15) + '%;top:' + (22 + (i % 2) * 8) + '%;transform:rotate(' + (i * 9 - 18) + 'deg);border-radius:10px 10px 6px 6px"></div>';
+    } else if (a.type === 'blobs') {
+      var bp = [[10,18],[42,10],[66,22],[18,52],[48,48],[70,58]];
+      for (i = 0; i < bp.length; i++) h += '<div class="blob" style="--c1:' + a.c1 + ';--c2:' + a.c2 + ';width:' + a.w + '%;height:' + a.h + '%;left:' + bp[i][0] + '%;top:' + bp[i][1] + '%;border-radius:' + a.shape + ';transform:rotate(' + (i * 37 % 60 - 30) + 'deg)"></div>';
+    }
+    return h;
+  }
+
+  // ====== КАТАЛОГ ======
+  function renderPills() {
+    var el = $('pills'); el.innerHTML = '';
+    CATEGORIES.forEach(function (c) {
+      var b = document.createElement('button');
+      b.className = 'pill' + (c.id === activeCat ? ' active' : '');
+      b.textContent = c.title;
+      b.setAttribute('role', 'tab');
+      b.onclick = function () { activeCat = c.id; renderPills(); renderGrid(); };
+      el.appendChild(b);
+    });
+  }
+
+  function renderGrid() {
+    var grid = $('grid'); grid.innerHTML = '';
+    PRODUCTS.filter(function (p) { return p.cat === activeCat; }).forEach(function (p, i) {
+      var card = document.createElement('article');
+      card.className = 'card';
+      card.style.animationDelay = (i * 90) + 'ms';
+      card.innerHTML =
+        '<div class="art" style="--glow:' + p.glow + '">' + artHTML(p) + '</div>' +
+        '<h3></h3>' +
+        '<span class="qbadge"></span>' +
+        '<div class="row"><span class="price">' + p.price.toLocaleString('ru-RU') + ' <small>' + CURRENCY + '</small></span>' +
+        '<div class="ctl"></div></div>';
+      card.querySelector('h3').textContent = p.name;
+      card.setAttribute('data-id', p.id);
+      paint(card, p.id);
+      grid.appendChild(card);
+    });
+  }
+
+  // Количество прямо на блюде: плашка на картинке и счётчик − N + вместо кнопки «+»
+  function paint(card, id) {
+    var q = cart[id] || 0;
+    var ctl = card.querySelector('.ctl');
+    var badge = card.querySelector('.qbadge');
+    var prev = +card.getAttribute('data-q') || 0;
+    card.setAttribute('data-q', q);
+    if (q > 0) {
+      ctl.innerHTML = '<div class="stepper"><button aria-label="Меньше">−</button><span>' + q + '</span><button aria-label="Больше">+</button></div>';
+      var b = ctl.querySelectorAll('button');
+      b[0].onclick = function () { change(id, -1); };
+      b[1].onclick = function () { add(id); };
+      badge.textContent = '× ' + q;
+      badge.classList.add('show');
+      if (q > prev) { badge.classList.remove('bump'); void badge.offsetWidth; badge.classList.add('bump'); }
+    } else {
+      ctl.innerHTML = '<button class="add" aria-label="Добавить в корзину">+</button>';
+      ctl.querySelector('.add').onclick = function () { add(id); };
+      badge.classList.remove('show');
+    }
+  }
+  function syncCards() {
+    Array.prototype.forEach.call(document.querySelectorAll('.card'), function (card) {
+      paint(card, card.getAttribute('data-id'));
+    });
+  }
+
+  // ====== КОРЗИНА ======
+  function add(id) { cart[id] = Math.min(99, (cart[id] || 0) + 1); update(true); }
+  function change(id, d) { cart[id] = (cart[id] || 0) + d; if (cart[id] <= 0) delete cart[id]; update(false); }
+  function remove(id) { delete cart[id]; update(false); }
+
+  function renderCart() {
+    var body = $('cartBody'), ids = Object.keys(cart);
+    if (!ids.length) {
+      body.innerHTML = '<div class="empty"><b>Пусто</b></div>';
+      return;
+    }
+    body.innerHTML = '';
+    ids.forEach(function (id, i) {
+      var p = byId[id];
+      var row = document.createElement('div');
+      row.className = 'item';
+      row.style.animationDelay = (i * 40) + 'ms';
+      row.innerHTML =
+        '<div class="item-ico" style="--glow:' + p.glow + '">' + catById[p.cat].icon + '</div>' +
+        '<div class="item-info"><div class="item-name"></div><div class="item-price"></div></div>' +
+        '<div class="qty"><button aria-label="Меньше">−</button><span>' + cart[id] + '</span><button aria-label="Больше">+</button></div>' +
+        '<button class="del" aria-label="Удалить">✕</button>';
+      row.querySelector('.item-name').textContent = p.name;
+      row.querySelector('.item-price').textContent = fmt(p.price) + ' × ' + cart[id] + ' = ' + fmt(p.price * cart[id]);
+      var b = row.querySelectorAll('.qty button');
+      b[0].onclick = function () { change(id, -1); };
+      b[1].onclick = function () { change(id, 1); };
+      row.querySelector('.del').onclick = function () { remove(id); };
+      body.appendChild(row);
+    });
+  }
+
+  function update(animate) {
+    var n = count(), s = sum();
+    $('badge').textContent = n;
+    $('total').textContent = fmt(s);
+    $('checkout').disabled = n === 0;
+    $('fabCount').textContent = n ? 'Корзина · ' + n + ' шт' : 'Корзина';
+    $('fabTotal').textContent = fmt(s);
+    $('fab').classList.toggle('show', n > 0 && !isOpen());
+    if (animate) { var b = $('badge'); b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); }
+    renderCart(); syncCards(); persist();
+  }
+
+  function isOpen() { return $('cart').classList.contains('open'); }
+  function openCart() { $('cart').classList.add('open'); $('overlay').classList.add('show'); document.body.classList.add('locked'); $('fab').classList.remove('show'); }
+  function closeCart() { $('cart').classList.remove('open'); $('overlay').classList.remove('show'); document.body.classList.remove('locked'); $('fab').classList.toggle('show', count() > 0); }
+  $('openCart').onclick = openCart;
+  $('fab').onclick = openCart;
+  $('closeCart').onclick = closeCart;
+  $('overlay').onclick = closeCart;
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isOpen()) closeCart(); });
+
+  // ====== ДОСТАВКА / САМОВЫВОЗ ======
+  Array.prototype.forEach.call($('mode').querySelectorAll('button'), function (b) {
+    b.onclick = function () {
+      mode = b.getAttribute('data-mode');
+      Array.prototype.forEach.call($('mode').querySelectorAll('button'), function (x) { x.classList.toggle('active', x === b); });
+      $('addrField').classList.toggle('hidden', mode === 'pickup');
+      $('address').classList.remove('error');
+    };
+  });
+
+  // ====== ОФОРМЛЕНИЕ ЗАКАЗА ======
+  ['name', 'address'].forEach(function (id) {
+    $(id).addEventListener('input', function () { this.classList.remove('error'); });
+  });
+
+  $('checkout').onclick = function () {
+    var name = $('name').value.trim(), address = $('address').value.trim(), ok = true;
+    if (!name) { $('name').classList.add('error'); ok = false; }
+    if (mode === 'delivery' && !address) { $('address').classList.add('error'); ok = false; }
+    if (!ok) { (name ? $('address') : $('name')).focus(); return; }
+    if (!count()) return;
+
+    var lines = Object.keys(cart).map(function (id) {
+      var p = byId[id];
+      return '• ' + p.name + ' — ' + cart[id] + ' × ' + fmt(p.price) + ' = ' + fmt(p.price * cart[id]);
+    });
+    var text =
+      '🍣 *Новый заказ*\n\n' +
+      '👤 *Имя:* ' + name + '\n' +
+      (mode === 'delivery'
+        ? '🚚 *Способ:* Доставка\n📍 *Адрес:* ' + address + '\n'
+        : '🏪 *Способ:* Самовывоз\n') +
+      '\n🧾 *Заказ:*\n' + lines.join('\n') + '\n\n' +
+      '💰 *Итого: ' + fmt(sum()) + '*\n\n' +
+      '🙏 Спасибо за заказ!';
+    var url = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(text);
+    var w = window.open(url, '_blank', 'noopener');
+    if (!w) window.location.href = url;
+  };
+
+  // ====== СТАРТ ======
+  renderPills(); renderGrid(); update(false);
+})();
+</script>
+</body>
+</html>
