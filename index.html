@@ -466,14 +466,13 @@
       return '• ' + p.name + ' — ' + cart[id] + ' × ' + fmt(p.price) + ' = ' + fmt(p.price * cart[id]);
     });
     var text =
-      '🍣 *Новый заказ*\n\n' +
-      '👤 *Имя:* ' + name + '\n' +
+      '*Новый заказ*\n\n' +
+      '*Клиент:* ' + name + '\n' +
       (mode === 'delivery'
-        ? '🚚 *Способ:* Доставка\n📍 *Адрес:* ' + address + '\n'
-        : '🏪 *Способ:* Самовывоз\n') +
-      '\n🧾 *Заказ:*\n' + lines.join('\n') + '\n\n' +
-      '💰 *Итого: ' + fmt(sum()) + '*\n\n' +
-      '🙏 Спасибо за заказ!';
+        ? '*Способ:* Доставка\n*Адрес:* ' + address + '\n'
+        : '*Способ:* Самовывоз\n') +
+      '\n*Заказ:*\n' + lines.join('\n') + '\n\n' +
+      '*Сумма:* ' + fmt(sum());
     var url = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(text);
     var w = window.open(url, '_blank', 'noopener');
     if (!w) window.location.href = url;
