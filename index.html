@@ -159,6 +159,8 @@
 
   .cart-foot { padding: 18px 26px calc(26px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
   .mode { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 12px; border-radius: 16px; background: rgba(244, 236, 224, 0.07); }
+  .mode.hidden { display: none; }
+  #village { grid-template-columns: 1fr 1fr 1fr; }
   .mode button { height: 44px; border-radius: 12px; font-size: 15px; font-weight: 600; color: var(--muted); transition: all 0.3s ease; }
   .mode button.active { background: var(--cream); color: #1a1613; }
   .field { margin-bottom: 10px; }
@@ -233,6 +235,11 @@
       <button class="active" data-mode="delivery">🚚 Доставка</button>
       <button data-mode="pickup">🏪 Самовывоз</button>
     </div>
+    <div class="mode hidden" id="village">
+      <button class="active" data-village="krainovka">Крайновка</button>
+      <button data-village="telman">Тельман</button>
+      <button data-village="terek">Новый Терек</button>
+    </div>
     <div class="field"><input type="time" id="time" placeholder="Желаемое время"></div>
     <div class="field"><input type="text" id="name" placeholder="Ваше имя" autocomplete="name"></div>
     <div class="field" id="addrField"><input type="text" id="address" placeholder="Адрес доставки" autocomplete="street-address"></div>
@@ -293,6 +300,7 @@
   var cart = {};
   var activeCat = CATEGORIES[0].id;
   var mode = 'delivery';
+  var village = 'krainovka';
 
   try {
     var saved = JSON.parse(localStorage.getItem('kuro_cart_final') || '{}');
@@ -445,7 +453,18 @@
     b.onclick = function () {
       mode = b.getAttribute('data-mode');
       Array.prototype.forEach.call($('mode').querySelectorAll('button'), function (x) { x.classList.toggle('active', x === b); });
-      $('addrField').classList.toggle('hidden', mode === 'pickup');
+      $('village').classList.toggle('hidden', mode === 'pickup');
+      $('addrField').classList.toggle('hidden', mode === 'pickup' || village === 'telman');
+      $('address').classList.remove('error');
+    };
+  });
+
+  // ====== ВЫБОР СЕЛА ======
+  Array.prototype.forEach.call($('village').querySelectorAll('button'), function (b) {
+    b.onclick = function () {
+      village = b.getAttribute('data-village');
+      Array.prototype.forEach.call($('village').querySelectorAll('button'), function (x) { x.classList.toggle('active', x === b); });
+      $('addrField').classList.toggle('hidden', mode === 'pickup' || village === 'telman');
       $('address').classList.remove('error');
     };
   });
@@ -458,7 +477,7 @@
   $('checkout').onclick = function () {
     var name = $('name').value.trim(), address = $('address').value.trim(), time = $('time').value, ok = true;
     if (!name) { $('name').classList.add('error'); ok = false; }
-    if (mode === 'delivery' && !address) { $('address').classList.add('error'); ok = false; }
+    if (mode === 'delivery' && village !== 'telman' && !address) { $('address').classList.add('error'); ok = false; }
     if (!time) { $('time').classList.add('error'); ok = false; }
     if (!ok) { (name ? $('address') : $('name')).focus(); return; }
     if (!count()) return;
@@ -467,11 +486,13 @@
       var p = byId[id];
       return '• ' + p.name + ' — ' + cart[id] + ' × ' + fmt(p.price) + ' = ' + fmt(p.price * cart[id]);
     });
+    var villageNames = { krainovka: 'Крайновка', telman: 'Тельман', terek: 'Новый Терек' };
     var text =
       '*Новый заказ*\n\n' +
       '*Клиент:* ' + name + '\n' +
+      '*Село:* ' + villageNames[village] + '\n' +
       (mode === 'delivery'
-        ? '*Способ:* Доставка\n*Адрес:* ' + address + '\n'
+        ? '*Способ:* Доставка' + (village !== 'telman' ? '\n*Адрес:* ' + address : '') + '\n'
         : '*Способ:* Самовывоз\n') +
       '*Время:* ' + time + '\n' +
       '\n*Заказ:*\n' + lines.join('\n') + '\n\n' +
