@@ -233,6 +233,7 @@
       <button class="active" data-mode="delivery">🚚 Доставка</button>
       <button data-mode="pickup">🏪 Самовывоз</button>
     </div>
+    <div class="field"><input type="time" id="time" placeholder="Желаемое время"></div>
     <div class="field"><input type="text" id="name" placeholder="Ваше имя" autocomplete="name"></div>
     <div class="field" id="addrField"><input type="text" id="address" placeholder="Адрес доставки" autocomplete="street-address"></div>
     <div class="total"><span>Итого</span><b id="total">0 ₽</b></div>
@@ -450,14 +451,15 @@
   });
 
   // ====== ОФОРМЛЕНИЕ ЗАКАЗА ======
-  ['name', 'address'].forEach(function (id) {
+  ['name', 'address', 'time'].forEach(function (id) {
     $(id).addEventListener('input', function () { this.classList.remove('error'); });
   });
 
   $('checkout').onclick = function () {
-    var name = $('name').value.trim(), address = $('address').value.trim(), ok = true;
+    var name = $('name').value.trim(), address = $('address').value.trim(), time = $('time').value, ok = true;
     if (!name) { $('name').classList.add('error'); ok = false; }
     if (mode === 'delivery' && !address) { $('address').classList.add('error'); ok = false; }
+    if (!time) { $('time').classList.add('error'); ok = false; }
     if (!ok) { (name ? $('address') : $('name')).focus(); return; }
     if (!count()) return;
 
@@ -471,6 +473,7 @@
       (mode === 'delivery'
         ? '*Способ:* Доставка\n*Адрес:* ' + address + '\n'
         : '*Способ:* Самовывоз\n') +
+      '*Время:* ' + time + '\n' +
       '\n*Заказ:*\n' + lines.join('\n') + '\n\n' +
       '*Сумма:* ' + fmt(sum());
     var url = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(text);
